@@ -34,23 +34,48 @@ def splashScreen():
     splashImg = Image.open(os.path.join(picdir, 'koala.bmp'))
     epd.display(epd.getbuffer(splashImg))
     time.sleep(2)
+import asyncio
+import keyboard
 
-async def keypress_listener():
+async def keypress_listener(text_changed_event):
     text = ""
+    caps_lock_active = False
+    shift_pressed = False
+
     while True:
         key_event = await asyncio.to_thread(keyboard.read_event)
         if key_event.event_type == keyboard.KEY_DOWN:
             if key_event.name == "enter":
                 print("Entered text:", text)
                 text = ""
+            elif key_event.name == "space":
+                text += " "
+            elif key_event.name == "caps lock":
+                caps_lock_active = not caps_lock_active
+            elif key_event.name == "backspace":
+                text = text[:-1]  # Delete the most recent character
+            elif key_event.name == "shift":
+                shift_pressed = True
             else:
-                text += key_event.name
+                if shift_pressed or (caps_lock_active and key_event.name.isalpha()):
+                    text += key_event.name.upper()
+                else:
+                    text += key_event.name
+            text_changed_event.set()
+
+        elif key_event.event_type == keyboard.KEY_UP:
+            if key_event.name == "shift":
+                shift_pressed = False
+
+async def text_changed_checker(text_changed_event):
+    while True:
+        await text_changed_event.wait()
         text_draw.rectangle((10, 10, 120, 50), fill = 255)
         text_draw.text((10, 10), time.strftime('%H:%M:%S'), font = font24, fill = 0)
         newimage = text_image.crop([10, 10, 120, 50])
         text_image.paste(newimage, (10,10))  
         epd.display_Partial(epd.getbuffer(text_image))
-
+        text_changed_event.clear()
 
 
 async def main():
@@ -60,9 +85,10 @@ async def main():
 
     epd.display_Base(epd.getbuffer(text_image))
 
-
+    text_changed_event = asyncio.Event()
     await asyncio.gather(
-        keypress_listener(),
+        keypress_listener(text_changed_event),
+        text_changed_checker(text_changed_event),
     )
 
 if __name__ == "__main__":
