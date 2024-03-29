@@ -13,8 +13,7 @@ import time
 from PIL import Image,ImageDraw,ImageFont
 import traceback
 import asyncio
-from evdev import InputDevice, ecodes
-import evdev
+import keyboard
 
 logging.basicConfig(level=logging.DEBUG)
 epd = epd2in9_V2.EPD()
@@ -25,7 +24,7 @@ font35 = ImageFont.truetype(os.path.join(picdir, 'Font.ttc'), 35)
 font12 = ImageFont.truetype(os.path.join(picdir, 'Font.ttc'), 12)
 
 text_image = Image.new('1', (epd.height, epd.width), 255)
-text_draw = ImageDraw.Draw(time_image)
+text_draw = ImageDraw.Draw(text_image)
 
 def initAndClear():
     epd.init()
@@ -33,44 +32,33 @@ def initAndClear():
 
 def splashScreen():
     splashImg = Image.open(os.path.join(picdir, 'koala.bmp'))
-    epd.display(epd.getbuffer(Himage))
+    epd.display(epd.getbuffer(splashImg))
     time.sleep(2)
 
 async def keypress_listener():
     text = ""
-    
-    # Find the keyboard input device
-    devices = [InputDevice(fn) for fn in evdev.list_devices()]
-    keyboard_device = None
-    for dev in devices:
-        if "keyboard" in dev.name.lower():
-            keyboard_device = dev
-            break
-    
-    # If keyboard device is found, start listening for events
-    if keyboard_device:
-        async for event in keyboard_device.async_read_loop():
-            if event.type == ecodes.EV_KEY and event.value == 1: # Check if it's a key press event
-                key = evdev.ecodes.KEY[event.code]
-                if key == "KEY_ENTER":
-                    print("Entered text:", text)
-                    text = ""
-                elif key == "KEY_SPACE":
-                    text += " "
-                else:
-                    text += key
-                time_draw.rectangle((10, 10, 120, 50), fill = 255)
-                time_draw.text((10, 10), time.strftime('%H:%M:%S'), font = font24, fill = 0)
-                newimage = time_image.crop([10, 10, 120, 50])
-                time_image.paste(newimage, (10,10))  
-                epd.display_Partial(epd.getbuffer(time_image))
+    while True:
+        key_event = await asyncio.to_thread(keyboard.read_event)
+        if key_event.event_type == keyboard.KEY_DOWN:
+            if key_event.name == "enter":
+                print("Entered text:", text)
+                text = ""
+            else:
+                text += key_event.name
+        text_draw.rectangle((10, 10, 120, 50), fill = 255)
+        text_draw.text((10, 10), time.strftime('%H:%M:%S'), font = font24, fill = 0)
+        newimage = text_image.crop([10, 10, 120, 50])
+        text_image.paste(newimage, (10,10))  
+        epd.display_Partial(epd.getbuffer(text_image))
+
+
 
 async def main():
 
     initAndClear()
     splashScreen()
 
-    epd.display_Base(epd.getbuffer(time_image))
+    epd.display_Base(epd.getbuffer(text_image))
 
 
     await asyncio.gather(
