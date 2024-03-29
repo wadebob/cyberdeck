@@ -14,8 +14,8 @@ from textual.widget import Widget
 
 import time
 import sys
-picdir = os.path.join('/home/wade/RaspberryPi_JetsonNano/python/examples/pic')
-libdir = os.path.join('/home/wade/RaspberryPi_JetsonNano/python/examples/lib')
+picdir = os.path.join('/home/wade/RaspberryPi_JetsonNano/python/pic/')
+libdir = os.path.join('/home/wade/RaspberryPi_JetsonNano/python/lib/')
 
 from waveshare_epd import epd2in9_V2
 
