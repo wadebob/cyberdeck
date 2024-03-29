@@ -12,6 +12,8 @@ from textual import events
 from textual.app import App
 from textual.widget import Widget
 
+from PIL import Image,ImageDraw,ImageFont
+
 import time
 import sys
 picdir = os.path.join('/home/wade/RaspberryPi_JetsonNano/python/pic/')
