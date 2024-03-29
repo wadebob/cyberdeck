@@ -16,6 +16,7 @@ import time
 import sys
 picdir = os.path.join('/home/wade/RaspberryPi_JetsonNano/python/pic/')
 libdir = os.path.join('/home/wade/RaspberryPi_JetsonNano/python/lib/')
+sys.path.append(libdir)
 
 from waveshare_epd import epd2in9_V2
 
