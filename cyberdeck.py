@@ -35,36 +35,38 @@ def splashScreen():
     epd.display(epd.getbuffer(Himage))
     time.sleep(2)
 
+import asyncio
+from evdev import InputDevice, ecodes
+import evdev
 
 async def keypress_listener():
     text = ""
     
-    def on_press(key):
-        nonlocal text
-        try:
-            if key == keyboard.Key.enter:
-                print("Entered text:", text)
-                text = ""
-            elif key == keyboard.Key.space:
-                text += " "
-            
-            else:
-                text += key.char
-                #print(text)
-
-        except AttributeError:
-            pass
-
-        finally:
-            time_draw.rectangle((10, 10, 120, 50), fill = 255)
-            time_draw.text((10, 10), time.strftime('%H:%M:%S'), font = font24, fill = 0)
-            newimage = time_image.crop([10, 10, 120, 50])
-            time_image.paste(newimage, (10,10))  
-            epd.display_Partial(epd.getbuffer(time_image))
+    # Find the keyboard input device
+    devices = [InputDevice(fn) for fn in evdev.list_devices()]
+    keyboard_device = None
+    for dev in devices:
+        if "keyboard" in dev.name.lower():
+            keyboard_device = dev
+            break
     
-    # Collect events until released
-    with keyboard.Listener(on_press=on_press) as listener:
-        await asyncio.Future()
+    # If keyboard device is found, start listening for events
+    if keyboard_device:
+        async for event in keyboard_device.async_read_loop():
+            if event.type == ecodes.EV_KEY and event.value == 1: # Check if it's a key press event
+                key = evdev.ecodes.KEY[event.code]
+                if key == "KEY_ENTER":
+                    print("Entered text:", text)
+                    text = ""
+                elif key == "KEY_SPACE":
+                    text += " "
+                else:
+                    text += key
+                time_draw.rectangle((10, 10, 120, 50), fill = 255)
+                time_draw.text((10, 10), time.strftime('%H:%M:%S'), font = font24, fill = 0)
+                newimage = time_image.crop([10, 10, 120, 50])
+                time_image.paste(newimage, (10,10))  
+                epd.display_Partial(epd.getbuffer(time_image))
 
 async def main():
 
