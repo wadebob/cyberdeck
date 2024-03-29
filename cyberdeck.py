@@ -23,6 +23,31 @@ font18 = ImageFont.truetype(os.path.join(picdir, 'Font.ttc'), 18)
 font35 = ImageFont.truetype(os.path.join(picdir, 'Font.ttc'), 35)
 font12 = ImageFont.truetype(os.path.join(picdir, 'Font.ttc'), 12)
 
+non_alphabet_characters = {
+    '`': '~',
+    '1': '!',
+    '2': '@',
+    '3': '#',
+    '4': '$',
+    '5': '%',
+    '6': '^',
+    '7': '&',
+    '8': '*',
+    '9': '(',
+    '0': ')',
+    '-': '_',
+    '=': '+',
+    '[': '{',
+    ']': '}',
+    '\\': '|',
+    ';': ':',
+    "'": '"',
+    ',': '<',
+    '.': '>',
+    '/': '?',
+}
+
+
 text_image = Image.new('1', (epd.height, epd.width), 255)
 text_draw = ImageDraw.Draw(text_image)
 
@@ -34,8 +59,6 @@ def splashScreen():
     splashImg = Image.open(os.path.join(picdir, 'koala.bmp'))
     epd.display(epd.getbuffer(splashImg))
     time.sleep(2)
-import asyncio
-import keyboard
 
 async def keypress_listener(text_changed_event):
     text = ""
@@ -56,9 +79,13 @@ async def keypress_listener(text_changed_event):
                 text = text[:-1]  # Delete the most recent character
             elif key_event.name == "shift":
                 shift_pressed = True
+            elif key_event.name == "tab":
+                text += "\t"  # Add a tab character
             else:
-                if shift_pressed or (caps_lock_active and key_event.name.isalpha()):
+                if (shift_pressed and key_event.name.isalpha()) or (caps_lock_active and key_event.name.isalpha()):
                     text += key_event.name.upper()
+                elif shift_pressed:
+                    text += non_alphabet_characters[key_event.name]
                 else:
                     text += key_event.name
             text_changed_event.set()
