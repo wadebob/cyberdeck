@@ -22,7 +22,7 @@ sys.path.append(libdir)
 
 from waveshare_epd import epd2in9_V2
 
-termFont = ImageFont.truetype(os.path.join(picdir, 'Font.ttc'), 24)
+termFont = ImageFont.truetype(os.path.join(picdir, 'Font.ttc'), 12)
 
 epd = epd2in9_V2.EPD()
 time_image = Image.new('1', (epd.height, epd.width), 255)
