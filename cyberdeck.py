@@ -13,7 +13,8 @@ import time
 from PIL import Image,ImageDraw,ImageFont
 import traceback
 import asyncio
-from pynput import keyboard
+from evdev import InputDevice, ecodes
+import evdev
 
 logging.basicConfig(level=logging.DEBUG)
 epd = epd2in9_V2.EPD()
@@ -34,10 +35,6 @@ def splashScreen():
     splashImg = Image.open(os.path.join(picdir, 'koala.bmp'))
     epd.display(epd.getbuffer(Himage))
     time.sleep(2)
-
-import asyncio
-from evdev import InputDevice, ecodes
-import evdev
 
 async def keypress_listener():
     text = ""
