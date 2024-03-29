@@ -22,6 +22,8 @@ sys.path.append(libdir)
 
 from waveshare_epd import epd2in9_V2
 
+termFont = ImageFont.truetype(os.path.join(picdir, 'Font.ttc'), 24)
+
 epd = epd2in9_V2.EPD()
 time_image = Image.new('1', (epd.height, epd.width), 255)
 time_draw = ImageDraw.Draw(time_image)
@@ -78,7 +80,7 @@ class Terminal(Widget, can_focus=True):
     def update_line(self,index):
         Tlines = [line.renderables[0].text for line in self._display.lines]
         time_draw.rectangle((0, 0+ (16*index), 296, 16+(16*index)), fill = 255)
-        time_draw.text(0, 0+ (16*index), Tlines[index], fill = 0)
+        time_draw.text(0, 0+ (16*index), Tlines[index],font = termFont, fill = 0)
         newimage = time_image.crop([0, 0+ (16*index), 296, 16+(16*index)])
         time_image.paste(newimage, (0, 0+ (16*index)))  
         epd.display_Partial(epd.getbuffer(time_image))
